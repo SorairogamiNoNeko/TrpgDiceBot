@@ -15,11 +15,16 @@ namespace TrpgDiceBot
 	{
 		public static async Task Execute(SocketUserMessage msg)
 		{
+			ProcessTaarget["+"] = ProcessTaargetAdd;
+			ProcessTaarget["-"] = ProcessTaargetSub;
+			ProcessTaarget["*"] = ProcessTaargetMul;
+			ProcessTaarget["/"] = ProcessTaargetDiv;
+
 			if (Regex.IsMatch(msg.ToString(), @"(?i)^&help$"))
 			{
 				await msg.Channel.SendMessageAsync(
 					"実は本当のプレフィックスは `%` です。\n" +
-					"コマンドは現在、`%help` `%version(ver)` があります。"
+					"コマンドは現在、`%help` `%version(ver)` `%git` があります。"
 					);
 
 				return;
@@ -29,16 +34,27 @@ namespace TrpgDiceBot
 
 			string dice_area = msg.Content.Split(new char[] { ':', ';' }).Last().Replace(" ", "").Replace("　", "");
 
-			Match per_check = Regex.Match(dice_area, @"(?i)^&(| |　)(percent|per|p)");
-			Match tar = Regex.Match(dice_area, @"(?i)(?<=(^&(| |　)(percent|per|p)(| |　)))\d+");
+			Match per_check = Regex.Match(dice_area, @"(?i)^&\s*(percent|per|p)");
+			Match tar = Regex.Match(dice_area, @"(?i)(?<=^&\s*(percent|per|p)\s*)\d+");
+
+			int finaly_tar = 0;
+
 			if (per_check.Length != 0) {
-				MatchCollection tar_fix = Regex.Matches(dice_area, @"(?i)(?<=(^&(| |　)(percent|per|p)(| |　))\d+(| |　))(?<sign>(\+|\-))(| |　)(?<fix>\d+)");
-				Match tar_mul;
-				Match tar_div;
-				dice_area = "1d100 tar=" + tar.Value;
+				MatchCollection tar_fixs = Regex.Matches(dice_area, @"(?i)(?<=\d+\s*)(?<ope>(\+|\-|\*|/))\s*(?<val>\d+)");
+				dice_area = "1d100 tar=";
+				if (tar.Length != 0)
+				{
+					finaly_tar = int.Parse(tar.Value);
+					foreach (Match m in tar_fixs)
+					{
+						ProcessTaarget[m.Groups["ope"].Value](ref finaly_tar, int.Parse(m.Groups["val"].Value));
+					}
+
+					dice_area += finaly_tar.ToString();
+				}
 			}
 
-			ISocketMessageChannel channel = msg.Channel;
+				ISocketMessageChannel channel = msg.Channel;
 
 			RandomManager.ClearHistory();
 
@@ -46,6 +62,11 @@ namespace TrpgDiceBot
 			MatchCollection fixes = Regex.Matches(dice_area, @"(?i)(?<fix>(\+|\-)\d+)(?=(\+|\-|$))");
 			MatchCollection dxs = Regex.Matches(dice_area, @"(?i)(?<sign>(\+|\-|))(?<value>\d+)dx((\[|@)(?<critical>\d+)(\]|))?");
 			Match target_match = Regex.Match(dice_area, @"(?i)(target|tar|trg|tgt)=\d+");
+
+			if (target_match.Success)
+			{
+				send_msg += "Target -> " + finaly_tar + "\n";
+			}
 
 			int d, r;
 			d = r = 0;
@@ -294,6 +315,30 @@ namespace TrpgDiceBot
 			ret_str += "]";
 
 			return ret_str;
+		}
+
+		private delegate void ProcessTargetDelegate(ref int tar, int val);
+
+		private static Dictionary<string, ProcessTargetDelegate> ProcessTaarget = new Dictionary<string, ProcessTargetDelegate>();
+
+		static private void ProcessTaargetAdd(ref int tar, int val)
+		{
+			tar += val;
+		}
+
+		static private void ProcessTaargetSub(ref int tar, int val)
+		{
+			tar -= val;
+		}
+
+		static private void ProcessTaargetMul(ref int tar, int val)
+		{
+			tar *= val;
+		}
+
+		static private void ProcessTaargetDiv(ref int tar, int val)
+		{
+			tar /= val;
 		}
 	}
 }

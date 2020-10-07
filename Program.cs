@@ -34,7 +34,7 @@ namespace TrpgDiceBot
 
 			await _handler.InitialCommandsAsync();
 
-			await _client.LoginAsync(TokenType.Bot, "NjkxNjg5MDE4OTkxMzEyOTU4.Xnjnow.4rDKViHS9J9y5Uo9OQ0NXLIe9Jg");
+			await _client.LoginAsync(TokenType.Bot, "token");
 			await _client.StartAsync();
 
 			await Task.Delay(-1);
