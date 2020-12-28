@@ -38,14 +38,11 @@ namespace TrpgDiceBot
 
 			int arg_pos = 0;
 
-			if(!(message.HasCharPrefix('%', ref arg_pos) || message.HasMentionPrefix(_client.CurrentUser, ref arg_pos))
+			if (!(message.HasCharPrefix('%', ref arg_pos) || message.HasMentionPrefix(_client.CurrentUser, ref arg_pos))
 				|| message.Author.IsBot)
 			{
-				if (message.HasCharPrefix('&', ref arg_pos))
-				{
-					// ひとつの文字列として読み取る場合
-					await DiceRoll.Execute(message);
-				}
+				// ひとつの文字列として読み取る場合
+				await DiceRoll.Execute(message);
 
 				return;
 			}

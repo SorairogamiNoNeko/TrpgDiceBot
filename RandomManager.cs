@@ -9,7 +9,7 @@ namespace TrpgDiceBot
 		private static bool _setSeed = false;
 		private static DateTime _setSeedTime;
 
-		public static List<int> DiceResultHistory = new List<int>();
+		public static List<int> DiceResultHistory { get; set; } = new List<int>();
 
 		public static int Rand(int sided, bool addList = true, bool Negative = false)
 		{

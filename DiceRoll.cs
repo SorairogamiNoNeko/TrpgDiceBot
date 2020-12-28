@@ -15,10 +15,28 @@ namespace TrpgDiceBot
 	{
 		public static async Task Execute(SocketUserMessage msg)
 		{
+
+
+			string dice_area = msg.Content.Split(new char[] { ':', ';' }).Last().Replace(" ", "").Replace("　", "");
+
+			if(dice_area[0] != '&' && dice_area[0] != '＆')
+			{
+				return;
+			}
+
 			ProcessTaarget["+"] = ProcessTaargetAdd;
+			ProcessTaarget["＋"] = ProcessTaargetAdd;
+
 			ProcessTaarget["-"] = ProcessTaargetSub;
+			ProcessTaarget["－"] = ProcessTaargetSub;
+
 			ProcessTaarget["*"] = ProcessTaargetMul;
+			ProcessTaarget["×"] = ProcessTaargetMul;
+			ProcessTaarget["＊"] = ProcessTaargetMul;
+
 			ProcessTaarget["/"] = ProcessTaargetDiv;
+			ProcessTaarget["／"] = ProcessTaargetDiv;
+			ProcessTaarget["÷"] = ProcessTaargetDiv;
 
 			if (Regex.IsMatch(msg.ToString(), @"(?i)^&help$"))
 			{
@@ -32,7 +50,10 @@ namespace TrpgDiceBot
 
 			string send_msg = msg.Author.Mention + '\n';
 
-			string dice_area = msg.Content.Split(new char[] { ':', ';' }).Last().Replace(" ", "").Replace("　", "");
+			// 全角文字を半角文字に変換
+			dice_area = Regex.Replace(dice_area, "[0-9]", p => ((char)(p.Value[0] - '0' + '０')).ToString());
+			dice_area = Regex.Replace(dice_area, "[ａ-ｚ]", p => ((char)(p.Value[0] - 'ａ' + 'a')).ToString());
+			dice_area = Regex.Replace(dice_area, "[Ａ-Ｚ]", p => ((char)(p.Value[0] - 'Ａ' + 'A')).ToString());
 
 			Match per_check = Regex.Match(dice_area, @"(?i)^&\s*(percent|per|p)");
 			Match tar = Regex.Match(dice_area, @"(?i)(?<=^&\s*(percent|per|p)\s*)\d+");
@@ -40,7 +61,7 @@ namespace TrpgDiceBot
 			int finaly_tar = 0;
 
 			if (per_check.Length != 0) {
-				MatchCollection tar_fixs = Regex.Matches(dice_area, @"(?i)(?<=\d+\s*)(?<ope>(\+|\-|\*|/))\s*(?<val>\d+)");
+				MatchCollection tar_fixs = Regex.Matches(dice_area, @"(?i)(?<=\d+\s*)(?<ope>(\+|＋|\-|－|\*|×|＊|/|／|÷))\s*(?<val>\d+)");
 				dice_area = "1d100 tar=";
 				if (tar.Length != 0)
 				{
@@ -54,13 +75,22 @@ namespace TrpgDiceBot
 				}
 			}
 
-				ISocketMessageChannel channel = msg.Channel;
+			ISocketMessageChannel channel = msg.Channel;
 
 			RandomManager.ClearHistory();
+
+			// キャラクリの位置
+			Match create_coc_match = Regex.Match(dice_area, @"(?i)coc");
+
+			if (create_coc_match.Success)
+			{
+				await CharacterCreateCoC.Create(msg);
+			}
 
 			MatchCollection dices = Regex.Matches(dice_area, @"(?i)(?<sign>(\+|\-|))(?<value>\d+)(?<type>(d|r))(?<sides>\d+)((\[|@)(?<critical>\d+)(\]|))?");
 			MatchCollection fixes = Regex.Matches(dice_area, @"(?i)(?<fix>(\+|\-)\d+)(?=(\+|\-|$))");
 			MatchCollection dxs = Regex.Matches(dice_area, @"(?i)(?<sign>(\+|\-|))(?<value>\d+)dx((\[|@)(?<critical>\d+)(\]|))?");
+
 			Match target_match = Regex.Match(dice_area, @"(?i)(target|tar|trg|tgt)=\d+");
 
 			if (target_match.Success)

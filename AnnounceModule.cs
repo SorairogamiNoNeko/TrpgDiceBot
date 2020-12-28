@@ -12,9 +12,9 @@ namespace TrpgDiceBot
 	[Group("orner_announce")]
 	public class AnnounceModule : ModuleBase<SocketCommandContext>
 	{
-		public async Task SendAnnounceAsync()
-		{
+		//public async Task SendAnnounceAsync()
+		//{
 			
-		}
+		//}
 	}
 }
